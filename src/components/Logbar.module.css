@@ -1,0 +1,51 @@
+.bar {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	height: 28px;
+	padding: 0 14px;
+	background: var(--surface);
+	border-top: 1px solid var(--border);
+	flex-shrink: 0;
+	font-size: 11px;
+	font-family: var(--font-mono);
+	overflow: hidden;
+}
+
+.clock {
+	color: var(--accent);
+	font-weight: 600;
+	flex-shrink: 0;
+	letter-spacing: 0.05em;
+}
+
+.divider {
+	width: 1px;
+	height: 14px;
+	background: var(--border);
+	flex-shrink: 0;
+}
+
+.ts {
+	color: var(--text-3);
+	flex-shrink: 0;
+}
+.sep {
+	color: var(--text-3);
+	flex-shrink: 0;
+}
+.msg {
+	color: var(--text-2);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	flex: 1;
+}
+
+.version {
+	color: var(--text-3);
+	flex-shrink: 0;
+	margin-left: auto;
+	font-size: 10px;
+	letter-spacing: 0.06em;
+}
