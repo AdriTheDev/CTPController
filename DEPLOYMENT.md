@@ -5,18 +5,6 @@ reverse proxy with Let's Encrypt HTTPS and nginx basic auth for access control.
 
 ---
 
-## Architecture
-
-```
-Browser / Tablet
-      ↓  HTTPS :443
-    nginx  ──── basic auth check
-      ├── /           → dist/  (static React app)
-      └── /auth/*     → :3001  (Express: Spotify PKCE)
-```
-
----
-
 ## Prerequisites
 
 ```bash
@@ -24,7 +12,7 @@ sudo apt update
 sudo apt install nginx certbot python3-certbot-nginx apache2-utils
 ```
 
-Node.js 24+:
+Install Node.js 24+:
 
 ```bash
 sudo apt-get install -y curl
@@ -62,7 +50,7 @@ npm run build        # outputs to dist/
 
 ---
 
-## Step 3 — Create a basic auth password
+## Step 3 — Create a basic auth password (Optional)
 
 ```bash
 # Creates /etc/nginx/.htpasswd with a user called "ctp"
@@ -101,41 +89,32 @@ server {
     include             /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam         /etc/letsencrypt/ssl-dhparams.pem;
 
-    # Basic auth — applies to the whole site
     auth_basic           "CTP Controller";
     auth_basic_user_file /etc/nginx/.htpasswd;
 
-    # Security headers
     add_header X-Frame-Options        "SAMEORIGIN"  always;
     add_header X-Content-Type-Options "nosniff"     always;
     add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
 
-    # Serve the built React app
     root  /var/www/CTPController/dist;
     index index.html;
 
-    # React Router — serve index.html for all non-file routes
     location / {
         try_files $uri $uri/ /index.html;
     }
 
-    # Cache static assets
     location ~* \.(js|css|png|jpg|svg|ico|woff2?)$ {
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
 
-    # manifest.json and sw.js must be served without basic auth
-    # (browsers fetch these automatically — they won't send credentials)
-    location ~ ^/(manifest\.json|sw\.js|icons/) {
+    location ~ ^/(manifest\.json|icons/) {
         auth_basic off;
         root  /var/www/CTPController/dist;
         try_files $uri =404;
         add_header Cache-Control "no-cache";
     }
 
-    # Proxy /auth/* and /api/* to Express — no basic auth
-    # All these routes are called via fetch() or Spotify redirect (no credentials)
     location ~ ^/(auth|api)/ {
         auth_basic off;
 
@@ -232,11 +211,6 @@ In your Spotify Developer dashboard, add:
 https://ctp.<yourdomain>.com/auth/spotify/callback
 ```
 
-> **Important:** The entire `/auth/` location block must have `auth_basic off`
-> in nginx (already included in the config above). All Spotify auth routes
-> are called without credentials — by the browser's `fetch()` and by
-> Spotify's redirect — so nginx would return 401 on all of them without this.
-
 ---
 
 ## Updating the app
@@ -281,10 +255,6 @@ Check: `sudo systemctl status ctp-controller`
 The `auth_basic off` directive is missing or not applying for `/auth/` or `/api/`.
 The nginx location block must be `location ~ ^/(auth|api)/` — check the config
 and run `sudo nginx -t && sudo systemctl reload nginx`.
-
-**PWA install prompt doesn't appear**
-Open Chrome DevTools → Application → Manifest. The most common cause is
-the service worker not registering. Check the Console for `[SW]` log lines.
 
 **Basic auth prompt appears on the Spotify callback tab**
 Same as above — ensure `auth_basic off` is set for `/auth/spotify/callback`.
